@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: pgadmin
+  name: pgadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: pgadmin
+    spec:
+      containers:
+      - image: dpage/pgadmin4
+        name: pgadmin
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 80
+        env:
+          - name: PGADMIN_DEFAULT_EMAIL
+            valueFrom:
+              secretKeyRef:
+                name: pgadmin-secret
+                key: PGADMIN_DEFAULT_EMAIL
+          - name: PGADMIN_DEFAULT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pgadmin-secret
+                key: PGADMIN_DEFAULT_PASSWORD
+                
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pgadmin-secret
+  labels:
+    app: pgadmin
+type: Opaque
+stringData:
+  PGADMIN_DEFAULT_EMAIL: "user@domain.com"
+  PGADMIN_DEFAULT_PASSWORD: "SuperSecret"  
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-svc
+  labels:
+    app: pgadmin
+spec:
+  type: ClusterIP
+  ports: 
+    - port: 80
+  selector:
+    app: pgadmin
